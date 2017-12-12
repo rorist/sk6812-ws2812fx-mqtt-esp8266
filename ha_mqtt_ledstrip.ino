@@ -10,7 +10,6 @@
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, PIN, NEO_GRBW + NEO_KHZ800);
 
 const bool debug_mode = CONFIG_DEBUG;
-const bool led_invert = CONFIG_INVERT_LED_LOGIC;
 
 const char* ssid = CONFIG_WIFI_SSID;
 const char* password = CONFIG_WIFI_PASS;
@@ -175,9 +174,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
     realWhite = 0;
   }
 
-  startFade = true;
-  inFade = false; // Kill the current fade
-
   sendState();
 }
 
@@ -202,68 +198,14 @@ bool processJson(char* message) {
     }
   }
 
-  // If "flash" is included, treat RGB and brightness differently
-  if (root.containsKey("flash") ||
-       (root.containsKey("effect") && strcmp(root["effect"], "flash") == 0)) {
-
-    if (root.containsKey("flash")) {
-      flashLength = (int)root["flash"] * 1000;
-    }
-    else {
-      flashLength = CONFIG_DEFAULT_FLASH_LENGTH * 1000;
-    }
-
-    if (root.containsKey("brightness")) {
-      flashBrightness = root["brightness"];
-    }
-    else {
-      flashBrightness = brightness;
-    }
-
-    if (root.containsKey("color")) {
-      flashRed = root["color"]["r"];
-      flashGreen = root["color"]["g"];
-      flashBlue = root["color"]["b"];
-    }
-    else {
-      flashRed = red;
-      flashGreen = green;
-      flashBlue = blue;
-    }
-
-    if (root.containsKey("white_value")) {
-      flashWhite = root["white_value"];
-    }
-    else {
-      flashWhite = white;
-    }
-
-    flashRed = map(flashRed, 0, 255, 0, flashBrightness);
-    flashGreen = map(flashGreen, 0, 255, 0, flashBrightness);
-    flashBlue = map(flashBlue, 0, 255, 0, flashBrightness);
-    flashWhite = map(flashWhite, 0, 255, 0, flashBrightness);
-
-    flash = true;
-    startFlash = true;
-  }
-  else if (root.containsKey("effect") &&
-      (strcmp(root["effect"], "colorfade_slow") == 0 || strcmp(root["effect"], "colorfade_fast") == 0)) {
-    flash = false;
-    colorfade = true;
-    currentColor = 0;
-    if (strcmp(root["effect"], "colorfade_slow") == 0) {
-      transitionTime = CONFIG_COLORFADE_TIME_SLOW;
-    }
-    else {
-      transitionTime = CONFIG_COLORFADE_TIME_FAST;
+  // Some effects
+  if (root.containsKey("effect")) {
+    if(strcmp(root["effect"], "myeffect1") == 0 || strcmp(root["effect"], "myeffect2") == 0) {
+      
     }
   }
-  else if (colorfade && !root.containsKey("color") && root.containsKey("brightness")) {
-    // Adjust brightness during colorfade
-    // (will be applied when fading to the next color)
-    brightness = root["brightness"];
-  }
-  else { // No effect
+  // No effect
+  else {
     flash = false;
     colorfade = false;
 
@@ -280,13 +222,6 @@ bool processJson(char* message) {
     if (root.containsKey("brightness")) {
       brightness = root["brightness"];
     }
-
-    if (root.containsKey("transition")) {
-      transitionTime = root["transition"];
-    }
-    else {
-      transitionTime = 0;
-    }
   }
 
   return true;
@@ -299,21 +234,14 @@ void sendState() {
 
   root["state"] = (stateOn) ? on_cmd : off_cmd;
   JsonObject& color = root.createNestedObject("color");
+  
   color["r"] = red;
   color["g"] = green;
   color["b"] = blue;
-
   root["brightness"] = brightness;
-
   root["white_value"] = white;
 
-  if (colorfade) {
-    if (transitionTime == CONFIG_COLORFADE_TIME_SLOW) {
-      root["effect"] = "colorfade_slow";
-    }
-    else {
-      root["effect"] = "colorfade_fast";
-    }
+  if (false) { // check if an effect is currently in use
   }
   else {
     root["effect"] = "null";
@@ -350,15 +278,9 @@ void reconnect() {
 }
 
 void setColor(int inR, int inG, int inB, int inW) {
-  if (led_invert) {
-    inR = (255 - inR);
-    inG = (255 - inG);
-    inB = (255 - inB);
-    inW = (255 - inW);
-  }
 
   for(int i=0; i< strip.numPixels(); i++) {
-    strip.setPixelColor(i, strip.Color( inR, inG, inB, inW ) );
+    strip.setPixelColor(i, inR, inG, inB, inW );
   }
   strip.show();
 
@@ -381,147 +303,10 @@ void loop() {
     reconnect();
   }
   client.loop();
-
-  if (flash) {
-    if (startFlash) {
-      startFlash = false;
-      flashStartTime = millis();
-    }
-
-    if ((millis() - flashStartTime) <= flashLength) {
-      if ((millis() - flashStartTime) % 1000 <= 500) {
-        setColor(flashRed, flashGreen, flashBlue, flashWhite);
-      }
-      else {
-        setColor(0, 0, 0, 0);
-        // If you'd prefer the flashing to happen "on top of"
-        // the current color, uncomment the next line.
-        // setColor(realRed, realGreen, realBlue, realWhite);
-      }
-    }
-    else {
-      flash = false;
-      setColor(realRed, realGreen, realBlue, realWhite);
-    }
-  }
-  else if (colorfade && !inFade) {
-    realRed = map(colors[currentColor][0], 0, 255, 0, brightness);
-    realGreen = map(colors[currentColor][1], 0, 255, 0, brightness);
-    realBlue = map(colors[currentColor][2], 0, 255, 0, brightness);
-    realWhite = map(colors[currentColor][3], 0, 255, 0, brightness);
-    currentColor = (currentColor + 1) % numColors;
-    startFade = true;
-  }
-
-  if (startFade) {
-    // If we don't want to fade, skip it.
-    if (transitionTime == 0) {
-      setColor(realRed, realGreen, realBlue, realWhite);
-
-      redVal = realRed;
-      grnVal = realGreen;
-      bluVal = realBlue;
-      whtVal = realWhite;
-
-      startFade = false;
-    }
-    else {
-      loopCount = 0;
-      stepR = calculateStep(redVal, realRed);
-      stepG = calculateStep(grnVal, realGreen);
-      stepB = calculateStep(bluVal, realBlue);
-      stepW = calculateStep(whtVal, realWhite);
-
-      inFade = true;
-    }
-  }
-
-  if (inFade) {
-    startFade = false;
-    unsigned long now = millis();
-    if (now - lastLoop > transitionTime) {
-      if (loopCount <= 1020) {
-        lastLoop = now;
-
-        redVal = calculateVal(stepR, redVal, loopCount);
-        grnVal = calculateVal(stepG, grnVal, loopCount);
-        bluVal = calculateVal(stepB, bluVal, loopCount);
-        whtVal = calculateVal(stepW, whtVal, loopCount);
-
-        setColor(redVal, grnVal, bluVal, whtVal); // Write current values to LED pins
-        if(debug_mode) {
-          Serial.print("Loop count: ");
-          Serial.println(loopCount);
-        }
-        loopCount++;
-      }
-      else {
-        inFade = false;
-      }
-    }
+  if(stateOn) {
+    setColor(red, green, blue, white);
+  } else {
+    setColor(0, 0, 0, 0);
   }
 }
 
-// From https://www.arduino.cc/en/Tutorial/ColorCrossfader
-/* BELOW THIS LINE IS THE MATH -- YOU SHOULDN'T NEED TO CHANGE THIS FOR THE BASICS
-*
-* The program works like this:
-* Imagine a crossfade that moves the red LED from 0-10,
-*   the green from 0-5, and the blue from 10 to 7, in
-*   ten steps.
-*   We'd want to count the 10 steps and increase or
-*   decrease color values in evenly stepped increments.
-*   Imagine a + indicates raising a value by 1, and a -
-*   equals lowering it. Our 10 step fade would look like:
-*
-*   1 2 3 4 5 6 7 8 9 10
-* R + + + + + + + + + +
-* G   +   +   +   +   +
-* B     -     -     -
-*
-* The red rises from 0 to 10 in ten steps, the green from
-* 0-5 in 5 steps, and the blue falls from 10 to 7 in three steps.
-*
-* In the real program, the color percentages are converted to
-* 0-255 values, and there are 1020 steps (255*4).
-*
-* To figure out how big a step there should be between one up- or
-* down-tick of one of the LED values, we call calculateStep(),
-* which calculates the absolute gap between the start and end values,
-* and then divides that gap by 1020 to determine the size of the step
-* between adjustments in the value.
-*/
-int calculateStep(int prevValue, int endValue) {
-    int step = endValue - prevValue; // What's the overall gap?
-    if (step) {                      // If its non-zero,
-        step = 1020/step;            //   divide by 1020
-    }
-
-    return step;
-}
-
-/* The next function is calculateVal. When the loop value, i,
-*  reaches the step size appropriate for one of the
-*  colors, it increases or decreases the value of that color by 1.
-*  (R, G, and B are each calculated separately.)
-*/
-int calculateVal(int step, int val, int i) {
-    if ((step) && i % step == 0) { // If step is non-zero and its time to change a value,
-        if (step > 0) {              //   increment the value if step is positive...
-            val += 1;
-        }
-        else if (step < 0) {         //   ...or decrement it if step is negative
-            val -= 1;
-        }
-    }
-
-    // Defensive driving: make sure val stays in the range 0-255
-    if (val > 255) {
-        val = 255;
-    }
-    else if (val < 0) {
-        val = 0;
-    }
-
-    return val;
-}
