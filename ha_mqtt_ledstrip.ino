@@ -11,6 +11,7 @@ PubSubClient client(espClient);
 #define PIN 14
 #define NUM_LEDS 300
 #define BRIGHTNESS 50
+#define SPEED 200
 
 #include <WS2812FX.h>
 WS2812FX ws2812fx = WS2812FX(NUM_LEDS, PIN, NEO_GRBW + NEO_KHZ800);
@@ -42,13 +43,13 @@ byte white = 0;
 byte brightness = 0;
 bool stateOn = false;
 const char* setEffect = NULL;
-String currentEffect = "";
+String currentEffect = "static";
 
 void setup() {
   
   ws2812fx.init();
   ws2812fx.setBrightness(BRIGHTNESS);
-  ws2812fx.setSpeed(200);
+  ws2812fx.setSpeed(SPEED);
   ws2812fx.setMode(FX_MODE_STATIC);
   ws2812fx.setColor(0, 0, 0);
   ws2812fx.start();
