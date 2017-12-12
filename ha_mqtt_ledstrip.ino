@@ -170,6 +170,7 @@ bool processJson(char* message) {
     }
     else if (strcmp(root["state"], off_cmd) == 0) {
       stateOn = false;
+      ws2812fx.setMode(FX_MODE_STATIC);
       ws2812fx.setColor(0, 0, 0);
     }
   }
