@@ -47,8 +47,10 @@ byte blue = 0;
 byte white = 0;
 byte brightness = 0;
 bool stateOn = false;
+
 const char* setEffect = NULL;
-String currentEffect = "solid";
+String currentEffect = "Static";
+String allEffects[MODE_COUNT];
 
 void setup() {
   
@@ -58,6 +60,11 @@ void setup() {
   ws2812fx.setMode(FX_MODE_STATIC);
   ws2812fx.setColor(0, 0, 0);
   ws2812fx.start();
+
+  // Store all mode names (for faster lookup ?)
+  for(uint8_t i=0; i < ws2812fx.getModeCount(); i++) {
+    allEffects[i] = ws2812fx.getModeName(i);
+  }
   
   if (debug_mode) {
     Serial.begin(115200);
@@ -170,11 +177,12 @@ bool processJson(char* message) {
   if (root.containsKey("effect")) {
     setEffect = root["effect"];
     currentEffect = setEffect;
-    if(currentEffect == "wipe") {
-      ws2812fx.setMode(FX_MODE_BREATH);
-    }
-    else if(currentEffect == "solid") {
-      ws2812fx.setMode(FX_MODE_STATIC);
+    int sizeEffects = sizeof(allEffects);
+    for(uint8_t i=0; i<sizeEffects; i++) {
+      if(currentEffect == allEffects[i]){
+        ws2812fx.setMode(i);
+        break;
+      }
     }
   }
 
