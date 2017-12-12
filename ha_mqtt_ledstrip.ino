@@ -12,14 +12,6 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, PIN, NEO_GRBW + NEO_KHZ800
 const bool debug_mode = CONFIG_DEBUG;
 const bool led_invert = CONFIG_INVERT_LED_LOGIC;
 
-/*
-const int redPin = CONFIG_PIN_RED;
-const int txPin = BUILTIN_LED; // On-board blue LED
-const int greenPin = CONFIG_PIN_GREEN;
-const int bluePin = CONFIG_PIN_BLUE;
-const int whitePin = CONFIG_PIN_WHITE;
-*/
-
 const char* ssid = CONFIG_WIFI_SSID;
 const char* password = CONFIG_WIFI_PASS;
 
@@ -91,23 +83,10 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 
 void setup() {
-  /*
-  pinMode(redPin, OUTPUT);
-  pinMode(greenPin, OUTPUT);
-  pinMode(bluePin, OUTPUT);
-  pinMode(whitePin, OUTPUT);
-  */
   
   strip.setBrightness(BRIGHTNESS);
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
-
-  /*
-  pinMode(txPin, OUTPUT);
-  digitalWrite(txPin, HIGH); // Turn off the on-board LED
-
-  analogWriteRange(255);
-  */
   
   if (debug_mode) {
     Serial.begin(115200);
@@ -122,22 +101,27 @@ void setup_wifi() {
 
   delay(10);
   // We start by connecting to a WiFi network
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
+  if(debug_mode) {
+    Serial.println();
+    Serial.print("Connecting to ");
+    Serial.println(ssid);
+  }
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
 
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    Serial.print(".");
+    if(debug_mode) {
+      Serial.print(".");
+    }
   }
-
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
+  if(debug_mode) {
+    Serial.println("");
+    Serial.println("WiFi connected");
+    Serial.println("IP address: ");
+    Serial.println(WiFi.localIP());
+  }
 }
 
   /*
@@ -157,16 +141,21 @@ void setup_wifi() {
     }
   */
 void callback(char* topic, byte* payload, unsigned int length) {
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.print("] ");
+
+  if(debug_mode) {
+    Serial.print("Message arrived [");
+    Serial.print(topic);
+    Serial.print("] ");
+  }
 
   char message[length + 1];
   for (int i = 0; i < length; i++) {
     message[i] = (char)payload[i];
   }
   message[length] = '\0';
-  Serial.println(message);
+  if(debug_mode) {
+    Serial.println(message);
+  }
 
   if (!processJson(message)) {
     return;
@@ -198,7 +187,9 @@ bool processJson(char* message) {
   JsonObject& root = jsonBuffer.parseObject(message);
 
   if (!root.success()) {
-    Serial.println("parseObject() failed");
+    if(debug_mode) {
+      Serial.println("parseObject() failed");
+    }
     return false;
   }
 
@@ -337,15 +328,21 @@ void sendState() {
 void reconnect() {
   // Loop until we're reconnected
   while (!client.connected()) {
-    Serial.print("Attempting MQTT connection...");
+    if(debug_mode) {
+      Serial.print("Attempting MQTT connection...");
+    }
     // Attempt to connect
     if (client.connect(client_id, mqtt_username, mqtt_password)) {
-      Serial.println("connected");
+      if(debug_mode) {
+        Serial.println("connected");
+      }
       client.subscribe(light_set_topic);
     } else {
-      Serial.print("failed, rc=");
-      Serial.print(client.state());
-      Serial.println(" try again in 5 seconds");
+      if(debug_mode) {
+        Serial.print("failed, rc=");
+        Serial.print(client.state());
+        Serial.println(" try again in 5 seconds");
+      }
       // Wait 5 seconds before retrying
       delay(5000);
     }
@@ -360,26 +357,22 @@ void setColor(int inR, int inG, int inB, int inW) {
     inW = (255 - inW);
   }
 
-  /*
-  analogWrite(redPin, inR);
-  analogWrite(greenPin, inG);
-  analogWrite(bluePin, inB);
-  analogWrite(whitePin, inW);
-  */
   for(int i=0; i< strip.numPixels(); i++) {
     strip.setPixelColor(i, strip.Color( inR, inG, inB, inW ) );
   }
   strip.show();
 
-  Serial.println("Setting LEDs:");
-  Serial.print("r: ");
-  Serial.print(inR);
-  Serial.print(", g: ");
-  Serial.print(inG);
-  Serial.print(", b: ");
-  Serial.print(inB);
-  Serial.print(", w: ");
-  Serial.println(inW);
+  if(debug_mode) {
+    Serial.println("Setting LEDs:");
+    Serial.print("r: ");
+    Serial.print(inR);
+    Serial.print(", g: ");
+    Serial.print(inG);
+    Serial.print(", b: ");
+    Serial.print(inB);
+    Serial.print(", w: ");
+    Serial.println(inW);
+  }
 }
 
 void loop() {
@@ -456,9 +449,10 @@ void loop() {
         whtVal = calculateVal(stepW, whtVal, loopCount);
 
         setColor(redVal, grnVal, bluVal, whtVal); // Write current values to LED pins
-
-        Serial.print("Loop count: ");
-        Serial.println(loopCount);
+        if(debug_mode) {
+          Serial.print("Loop count: ");
+          Serial.println(loopCount);
+        }
         loopCount++;
       }
       else {
