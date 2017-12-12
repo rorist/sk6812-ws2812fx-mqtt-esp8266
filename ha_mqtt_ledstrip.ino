@@ -12,11 +12,13 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, PIN, NEO_GRBW + NEO_KHZ800
 const bool debug_mode = CONFIG_DEBUG;
 const bool led_invert = CONFIG_INVERT_LED_LOGIC;
 
+/*
 const int redPin = CONFIG_PIN_RED;
 const int txPin = BUILTIN_LED; // On-board blue LED
 const int greenPin = CONFIG_PIN_GREEN;
 const int bluePin = CONFIG_PIN_BLUE;
 const int whitePin = CONFIG_PIN_WHITE;
+*/
 
 const char* ssid = CONFIG_WIFI_SSID;
 const char* password = CONFIG_WIFI_PASS;
@@ -364,8 +366,8 @@ void setColor(int inR, int inG, int inB, int inW) {
   analogWrite(bluePin, inB);
   analogWrite(whitePin, inW);
   */
-  for(i=0; i< strip.numPixels(); i++) {
-    strip.setPixelColor(i, strip.Color( inR, inG, inB, inW ) ));
+  for(int i=0; i< strip.numPixels(); i++) {
+    strip.setPixelColor(i, strip.Color( inR, inG, inB, inW ) );
   }
   strip.show();
 
