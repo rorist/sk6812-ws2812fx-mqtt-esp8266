@@ -40,7 +40,8 @@ byte blue = 0;
 byte white = 0;
 byte brightness = 0;
 bool stateOn = false;
-const char* currentEffect = NULL;
+const char* setEffect = NULL;
+String currentEffect = "";
 
 void setup() {
   
@@ -60,8 +61,8 @@ void setup() {
 }
 
 void setup_ota() {
-  ArduinoOTA.setHostname("kitchen_leds");
-  ArduinoOTA.setPassword((const char *)"trustno1");
+  ArduinoOTA.setHostname(CONFIG_OTA_NAME);
+  ArduinoOTA.setPassword((const char *)CONFIG_OTA_PASS);
   ArduinoOTA.onStart([]() {
     Serial.println("Starting");
   });
@@ -171,7 +172,8 @@ bool processJson(char* message) {
   }
 
   if (root.containsKey("effect")) {
-    currentEffect = root["effect"];
+    setEffect = root["effect"];
+    currentEffect = setEffect;
   }
 
   if (root.containsKey("color")) {
@@ -206,8 +208,8 @@ void sendState() {
   root["brightness"] = brightness;
   root["white_value"] = white;
 
-  if (currentEffect != NULL) {
-    root["effect"] = String(currentEffect);
+  if (currentEffect != "") {
+    root["effect"] = currentEffect;
   }
 
   char buffer[root.measureLength() + 1];
@@ -270,10 +272,10 @@ void loop() {
   client.loop();
 
   if(stateOn) {
-    if(currentEffect != NULL) {
-      if(strcmp(currentEffect, "wipe") == 0) {
+    if(currentEffect != "") {
+      if(currentEffect == "wipe") {
         colorWipe();
-      } else if(strcmp(currentEffect, "solid") == 0) {
+      } else if(currentEffect == "solid") {
         setColor(red, green, blue, white);
       }
     } else {
