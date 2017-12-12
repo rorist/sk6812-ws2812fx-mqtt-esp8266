@@ -1,5 +1,6 @@
 #include "config.h"
 #include <ArduinoJson.h>
+#include <ArduinoOTA.h>
 
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
@@ -33,11 +34,11 @@ const char* off_cmd = CONFIG_MQTT_PAYLOAD_OFF;
 const int BUFFER_SIZE = JSON_OBJECT_SIZE(20);
 
 // Maintained state for reporting to HA
-byte red = 255;
-byte green = 255;
-byte blue = 255;
-byte white = 255;
-byte brightness = 255;
+byte red = 127;
+byte green = 0;
+byte blue = 0;
+byte white = 0;
+byte brightness = 0;
 bool stateOn = false;
 const char* currentEffect = NULL;
 
@@ -52,8 +53,33 @@ void setup() {
   }
 
   setup_wifi();
+  setup_ota();
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
+
+}
+
+void setup_ota() {
+  ArduinoOTA.setHostname("kitchen_leds");
+  ArduinoOTA.setPassword((const char *)"trustno1");
+  ArduinoOTA.onStart([]() {
+    Serial.println("Starting");
+  });
+  ArduinoOTA.onEnd([]() {
+    Serial.println("\nEnd");
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+    else if (error == OTA_END_ERROR) Serial.println("End Failed");
+  });
+  ArduinoOTA.begin();
 }
 
 void setup_wifi() {
@@ -181,10 +207,7 @@ void sendState() {
   root["white_value"] = white;
 
   if (currentEffect != NULL) {
-    root["effect"] = currentEffect;
-  }
-  else {
-    root["effect"] = "solid"; // default effect
+    root["effect"] = String(currentEffect);
   }
 
   char buffer[root.measureLength() + 1];
@@ -238,11 +261,14 @@ void setColor(int inR, int inG, int inB, int inW) {
 }
 
 void loop() {
+  
+  ArduinoOTA.handle();
 
   if (!client.connected()) {
     reconnect();
   }
   client.loop();
+
   if(stateOn) {
     if(currentEffect != NULL) {
       if(strcmp(currentEffect, "wipe") == 0) {
@@ -268,12 +294,12 @@ void colorWipeSingle(uint32_t c) {
   for(uint16_t i=0; i<strip.numPixels(); i++) {
     strip.setPixelColor(i, c);
     strip.show();
-    delay(50);
+    delay(10);
   }
 }
 void colorWipe() {
   colorWipeSingle(strip.Color(255, 0, 0));    // Red
-  colorWipeSingle(strip.Color(0, 255, 0));    // Green
+  //colorWipeSingle(strip.Color(0, 255, 0));    // Green
   colorWipeSingle(strip.Color(0, 0, 255));    // Blue
-  colorWipeSingle(strip.Color(0, 0, 0, 255)); // White
+  //colorWipeSingle(strip.Color(0, 0, 0, 255)); // White
 }
