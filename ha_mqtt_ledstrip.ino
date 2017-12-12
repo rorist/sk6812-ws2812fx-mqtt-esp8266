@@ -1,7 +1,11 @@
 #include "config.h"
 #include <ArduinoJson.h>
+
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
+
+WiFiClient espClient;
+PubSubClient client(espClient);
 
 #include <Adafruit_NeoPixel.h>
 #define PIN 14
@@ -34,52 +38,8 @@ byte green = 255;
 byte blue = 255;
 byte white = 255;
 byte brightness = 255;
-
-// Real values to write to the LEDs (ex. including brightness and state)
-byte realRed = 0;
-byte realGreen = 0;
-byte realBlue = 0;
-byte realWhite = 0;
-
 bool stateOn = false;
-
-// Globals for fade/transitions
-bool startFade = false;
-unsigned long lastLoop = 0;
-int transitionTime = 0;
-bool inFade = false;
-int loopCount = 0;
-int stepR, stepG, stepB, stepW;
-int redVal, grnVal, bluVal, whtVal;
-
-// Globals for flash
-bool flash = false;
-bool startFlash = false;
-int flashLength = 0;
-unsigned long flashStartTime = 0;
-byte flashRed = red;
-byte flashGreen = green;
-byte flashBlue = blue;
-byte flashWhite = white;
-byte flashBrightness = brightness;
-
-// Globals for colorfade
-bool colorfade = false;
-int currentColor = 0;
-// {red, grn, blu, wht}
-const byte colors[][4] = {
-  {255, 0, 0, 0},
-  {0, 255, 0, 0},
-  {0, 0, 255, 0},
-  {255, 80, 0, 0},
-  {163, 0, 255, 0},
-  {0, 255, 255, 0},
-  {255, 255, 0, 0}
-};
-const int numColors = 7;
-
-WiFiClient espClient;
-PubSubClient client(espClient);
+const char* currentEffect = NULL;
 
 void setup() {
   
@@ -160,20 +120,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
     return;
   }
 
-  if (stateOn) {
-    // Update lights
-    realRed = map(red, 0, 255, 0, brightness);
-    realGreen = map(green, 0, 255, 0, brightness);
-    realBlue = map(blue, 0, 255, 0, brightness);
-    realWhite = map(white, 0, 255, 0, brightness);
-  }
-  else {
-    realRed = 0;
-    realGreen = 0;
-    realBlue = 0;
-    realWhite = 0;
-  }
-
   sendState();
 }
 
@@ -198,31 +144,24 @@ bool processJson(char* message) {
     }
   }
 
-  // Some effects
   if (root.containsKey("effect")) {
-    if(strcmp(root["effect"], "myeffect1") == 0 || strcmp(root["effect"], "myeffect2") == 0) {
-      
-    }
+    currentEffect = root["effect"];
   }
-  // No effect
-  else {
-    flash = false;
-    colorfade = false;
 
-    if (root.containsKey("color")) {
-      red = root["color"]["r"];
-      green = root["color"]["g"];
-      blue = root["color"]["b"];
-    }
-
-    if (root.containsKey("white_value")) {
-      white = root["white_value"];
-    }
-
-    if (root.containsKey("brightness")) {
-      brightness = root["brightness"];
-    }
+  if (root.containsKey("color")) {
+    red = root["color"]["r"];
+    green = root["color"]["g"];
+    blue = root["color"]["b"];
   }
+
+  if (root.containsKey("white_value")) {
+    white = root["white_value"];
+  }
+
+  if (root.containsKey("brightness")) {
+    brightness = root["brightness"];
+  }
+  
 
   return true;
 }
@@ -241,10 +180,11 @@ void sendState() {
   root["brightness"] = brightness;
   root["white_value"] = white;
 
-  if (false) { // check if an effect is currently in use
+  if (currentEffect != NULL) {
+    root["effect"] = currentEffect;
   }
   else {
-    root["effect"] = "null";
+    root["effect"] = "solid"; // default effect
   }
 
   char buffer[root.measureLength() + 1];
@@ -304,9 +244,36 @@ void loop() {
   }
   client.loop();
   if(stateOn) {
-    setColor(red, green, blue, white);
+    if(currentEffect != NULL) {
+      if(strcmp(currentEffect, "wipe") == 0) {
+        colorWipe();
+      } else if(strcmp(currentEffect, "solid") == 0) {
+        setColor(red, green, blue, white);
+      }
+    } else {
+      setColor(red, green, blue, white);
+    }
   } else {
     setColor(0, 0, 0, 0);
   }
 }
 
+
+/*
+ *  Effects
+ */
+
+// Fill the dots one after the other with a color
+void colorWipeSingle(uint32_t c) {
+  for(uint16_t i=0; i<strip.numPixels(); i++) {
+    strip.setPixelColor(i, c);
+    strip.show();
+    delay(50);
+  }
+}
+void colorWipe() {
+  colorWipeSingle(strip.Color(255, 0, 0));    // Red
+  colorWipeSingle(strip.Color(0, 255, 0));    // Green
+  colorWipeSingle(strip.Color(0, 0, 255));    // Blue
+  colorWipeSingle(strip.Color(0, 0, 0, 255)); // White
+}
