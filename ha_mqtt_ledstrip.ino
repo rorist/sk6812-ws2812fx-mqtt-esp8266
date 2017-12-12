@@ -1,11 +1,16 @@
-// TODO
-// Handle brightness
-// Handle with leds directly with setPixelColor() in parse json
+// Based on
+// https://github.com/kitesurfer1404/WS2812FX
+// https://github.com/corbanmailloux/esp-mqtt-rgb-led
 
+// TODO
+// Change Speed
+// Make White work
+// Make OTA work
+// Get rid of the String with some char
 
 #include "config.h"
 #include <ArduinoJson.h>
-#include <ArduinoOTA.h>
+//#include <ArduinoOTA.h>
 
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
@@ -15,7 +20,6 @@ PubSubClient client(espClient);
 
 #define PIN 14
 #define NUM_LEDS 300
-#define BRIGHTNESS 50
 #define SPEED 200
 
 #include <WS2812FX.h>
@@ -45,7 +49,7 @@ byte red = 127;
 byte green = 0;
 byte blue = 0;
 byte white = 0;
-byte brightness = 0;
+byte brightness = 127;
 bool stateOn = false;
 
 const char* setEffect = NULL;
@@ -55,7 +59,7 @@ String allEffects[MODE_COUNT];
 void setup() {
   
   ws2812fx.init();
-  ws2812fx.setBrightness(BRIGHTNESS);
+  ws2812fx.setBrightness(brightness);
   ws2812fx.setSpeed(SPEED);
   ws2812fx.setMode(FX_MODE_STATIC);
   ws2812fx.setColor(0, 0, 0);
@@ -71,13 +75,14 @@ void setup() {
   }
 
   setup_wifi();
-  setup_ota();
+  //setup_ota();
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
 
   sendState();
 }
 
+/*
 void setup_ota() {
   ArduinoOTA.setHostname(CONFIG_OTA_NAME);
   ArduinoOTA.setPassword((const char *)CONFIG_OTA_PASS);
@@ -100,6 +105,7 @@ void setup_ota() {
   });
   ArduinoOTA.begin();
 }
+*/
 
 void setup_wifi() {
 
@@ -167,10 +173,13 @@ bool processJson(char* message) {
   if (root.containsKey("state")) {
     if (strcmp(root["state"], on_cmd) == 0) {
       stateOn = true;
+      setMode(currentEffect);
+      ws2812fx.setColor(red, green, blue);
+      //setAllColors();
     }
     else if (strcmp(root["state"], off_cmd) == 0) {
       stateOn = false;
-      ws2812fx.setMode(FX_MODE_STATIC);
+      setMode("Static");
       ws2812fx.setColor(0, 0, 0);
     }
   }
@@ -178,13 +187,7 @@ bool processJson(char* message) {
   if (root.containsKey("effect")) {
     setEffect = root["effect"];
     currentEffect = setEffect;
-    int sizeEffects = sizeof(allEffects);
-    for(uint8_t i=0; i<sizeEffects; i++) {
-      if(currentEffect == allEffects[i]){
-        ws2812fx.setMode(i);
-        break;
-      }
-    }
+    setMode(currentEffect);
   }
 
   if (root.containsKey("color")) {
@@ -197,15 +200,33 @@ bool processJson(char* message) {
   /*
   if (root.containsKey("white_value")) {
     white = root["white_value"];
+    setAllColors();
   }
+  */
 
   if (root.containsKey("brightness")) {
     brightness = root["brightness"];
+    ws2812fx.setBrightness(brightness);
   }
-  */
-  
-
+ 
   return true;
+}
+
+void setMode(String _mode) {
+  int sizeEffects = sizeof(allEffects);
+  for(uint8_t i=0; i<sizeEffects; i++) {
+    if(_mode == allEffects[i]){
+      ws2812fx.setMode(i);
+      break;
+    }
+  }
+}
+
+void setAllColors() {
+    for(uint16_t i=0; i<ws2812fx.numPixels(); i++) {
+      ws2812fx.setPixelColor(i, red, green, blue, white);
+      ws2812fx.show();
+    }
 }
 
 void sendState() {
@@ -221,10 +242,7 @@ void sendState() {
   color["b"] = blue;
   root["brightness"] = brightness;
   root["white_value"] = white;
-
-  if (currentEffect != "") {
-    root["effect"] = currentEffect;
-  }
+  root["effect"] = currentEffect;
 
   char buffer[root.measureLength() + 1];
   root.printTo(buffer, sizeof(buffer));
@@ -257,7 +275,7 @@ void reconnect() {
 }
 
 void loop() {
-  ArduinoOTA.handle();
+  //ArduinoOTA.handle();
   if (!client.connected()) {
     reconnect();
   }
