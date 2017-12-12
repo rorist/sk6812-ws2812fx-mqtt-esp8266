@@ -1,3 +1,8 @@
+// TODO
+// Handle brightness
+// Handle with leds directly with setPixelColor() in parse json
+
+
 #include "config.h"
 #include <ArduinoJson.h>
 #include <ArduinoOTA.h>
@@ -43,7 +48,7 @@ byte white = 0;
 byte brightness = 0;
 bool stateOn = false;
 const char* setEffect = NULL;
-String currentEffect = "static";
+String currentEffect = "solid";
 
 void setup() {
   
@@ -64,7 +69,6 @@ void setup() {
   client.setCallback(callback);
 
   sendState();
-
 }
 
 void setup_ota() {
@@ -117,22 +121,6 @@ void setup_wifi() {
   }
 }
 
-  /*
-  SAMPLE PAYLOAD:
-    {
-      "brightness": 120,
-      "color": {
-        "r": 255,
-        "g": 100,
-        "b": 100
-      },
-      "white_value": 255,
-      "flash": 2,
-      "transition": 5,
-      "state": "ON",
-      "effect": "colorfade_fast"
-    }
-  */
 void callback(char* topic, byte* payload, unsigned int length) {
 
   if(debug_mode) {
