@@ -5,7 +5,7 @@ light:
     command_topic: "feather/leds/set"
     brightness: true
     rgb: true
-    white_value: true
+    white_value: false
     effect: true
     effect_list:
     - Static
