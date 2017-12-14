@@ -1,6 +1,6 @@
 // WiFi
-#define CONFIG_WIFI_SSID "***REMOVED***"
-#define CONFIG_WIFI_PASS "***REMOVED***"
+#define CONFIG_WIFI_SSID "mywifissid"
+#define CONFIG_WIFI_PASS "mywifipassword"
 #define CONFIG_WIFI_HOST "esp8266_feather_leds"
 
 // MQTT
