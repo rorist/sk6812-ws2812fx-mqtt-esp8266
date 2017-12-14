@@ -5,12 +5,11 @@
 // TODO
 // Change Speed
 // Make White work
-// Make OTA work
 // Get rid of the String with some char
 
 #include "config.h"
 #include <ArduinoJson.h>
-//#include <ArduinoOTA.h>
+#include <ArduinoOTA.h>
 
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
@@ -75,14 +74,13 @@ void setup() {
   }
 
   setup_wifi();
-  //setup_ota();
+  setup_ota();
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
 
   sendState();
 }
 
-/*
 void setup_ota() {
   ArduinoOTA.setHostname(CONFIG_OTA_NAME);
   ArduinoOTA.setPassword((const char *)CONFIG_OTA_PASS);
@@ -105,7 +103,6 @@ void setup_ota() {
   });
   ArduinoOTA.begin();
 }
-*/
 
 void setup_wifi() {
 
@@ -276,7 +273,7 @@ void reconnect() {
 }
 
 void loop() {
-  //ArduinoOTA.handle();
+  ArduinoOTA.handle();
   if (!client.connected()) {
     reconnect();
   }
