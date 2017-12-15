@@ -110,27 +110,15 @@ void callback(char* topic, byte* payload, unsigned int length) {
     message[i] = (char)payload[i];
   }
   message[length] = '\0';
-  if(debug_mode) {
-    Serial.println(message);
-  }
-
-  if (!processJson(message)) {
-    return;
-  }
-
+  processJson(message);
   sendState();
 }
 
-bool processJson(char* message) {
+void processJson(char* message) {
   StaticJsonBuffer<BUFFER_SIZE> jsonBuffer;
-
   JsonObject& root = jsonBuffer.parseObject(message);
-
   if (!root.success()) {
-    if(debug_mode) {
-      Serial.println("parseObject() failed");
-    }
-    return false;
+    return;
   }
 
   if (root.containsKey("state")) {
