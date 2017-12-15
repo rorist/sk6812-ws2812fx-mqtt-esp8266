@@ -84,32 +84,21 @@ void setup_ota() {
   ArduinoOTA.setHostname(CONFIG_OTA_NAME);
   ArduinoOTA.setPassword((const char *)CONFIG_OTA_PASS);
   ArduinoOTA.onStart([]() {
-    Serial.println("Starting");
+      setMode("Static");
+      ws2812fx.setColor(0, 0, 0);
   });
   ArduinoOTA.onEnd([]() {
-    Serial.println("\nEnd");
-  });
-  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-  });
-  ArduinoOTA.onError([](ota_error_t error) {
-    Serial.printf("Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-    else if (error == OTA_END_ERROR) Serial.println("End Failed");
+      setMode(currentEffect);
+      ws2812fx.setColor(red, green, blue);
   });
   ArduinoOTA.begin();
 }
 
 void setup_wifi() {
-
   delay(10);
   WiFi.mode(WIFI_STA);
   WiFi.hostname(CONFIG_WIFI_HOST);
   WiFi.begin(ssid, password);
-
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
   }
