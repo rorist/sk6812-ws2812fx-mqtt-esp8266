@@ -9,6 +9,9 @@
 
 #include "config.h"
 #include <ArduinoJson.h>
+
+#include <WiFiUdp.h>
+#include <ESP8266mDNS.h>
 #include <ArduinoOTA.h>
 
 #include <ESP8266WiFi.h>
