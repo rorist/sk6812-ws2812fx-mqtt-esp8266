@@ -1,3 +1,7 @@
+// LEDs
+#define CONFIG_LED_PIN 14
+#define CONFIG_LED_COUNT 300
+
 // WiFi
 #define CONFIG_WIFI_SSID "mywifissid"
 #define CONFIG_WIFI_PASS "mywifipassword"

@@ -20,14 +20,8 @@
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-#define PIN 14
-#define NUM_LEDS 300
-#define SPEED 200
-
 #include <WS2812FX.h>
-WS2812FX ws2812fx = WS2812FX(NUM_LEDS, PIN, NEO_GRBW + NEO_KHZ800);
-
-const bool debug_mode = CONFIG_DEBUG;
+WS2812FX ws2812fx = WS2812FX(CONFIG_LED_COUNT, CONFIG_LED_PIN, NEO_GRBW + NEO_KHZ800);
 
 const char* ssid = CONFIG_WIFI_SSID;
 const char* password = CONFIG_WIFI_PASS;
@@ -36,11 +30,8 @@ const char* mqtt_server = CONFIG_MQTT_HOST;
 const char* mqtt_username = CONFIG_MQTT_USER;
 const char* mqtt_password = CONFIG_MQTT_PASS;
 const char* client_id = CONFIG_MQTT_CLIENT_ID;
-
-// Topics
 const char* light_state_topic = CONFIG_MQTT_TOPIC_STATE;
 const char* light_set_topic = CONFIG_MQTT_TOPIC_SET;
-
 const char* on_cmd = CONFIG_MQTT_PAYLOAD_ON;
 const char* off_cmd = CONFIG_MQTT_PAYLOAD_OFF;
 
