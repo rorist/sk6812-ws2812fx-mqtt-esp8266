@@ -71,10 +71,6 @@ void setup() {
   for(uint8_t i=0; i < ws2812fx.getModeCount(); i++) {
     allEffects[i] = ws2812fx.getModeName(i);
   }
-  
-  if (debug_mode) {
-    Serial.begin(115200);
-  }
 
   setup_wifi();
   setup_ota();
@@ -110,39 +106,16 @@ void setup_ota() {
 void setup_wifi() {
 
   delay(10);
-  // We start by connecting to a WiFi network
-  if(debug_mode) {
-    Serial.println();
-    Serial.print("Connecting to ");
-    Serial.println(ssid);
-  }
-
   WiFi.mode(WIFI_STA);
   WiFi.hostname(CONFIG_WIFI_HOST);
   WiFi.begin(ssid, password);
 
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    if(debug_mode) {
-      Serial.print(".");
-    }
-  }
-  if(debug_mode) {
-    Serial.println("");
-    Serial.println("WiFi connected");
-    Serial.println("IP address: ");
-    Serial.println(WiFi.localIP());
   }
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
-
-  if(debug_mode) {
-    Serial.print("Message arrived [");
-    Serial.print(topic);
-    Serial.print("] ");
-  }
-
   char message[length + 1];
   for (int i = 0; i < length; i++) {
     message[i] = (char)payload[i];
@@ -254,22 +227,10 @@ void sendState() {
 void reconnect() {
   // Loop until we're reconnected
   while (!client.connected()) {
-    if(debug_mode) {
-      Serial.print("Attempting MQTT connection...");
-    }
     // Attempt to connect
     if (client.connect(client_id, mqtt_username, mqtt_password)) {
-      if(debug_mode) {
-        Serial.println("connected");
-      }
       client.subscribe(light_set_topic);
     } else {
-      if(debug_mode) {
-        Serial.print("failed, rc=");
-        Serial.print(client.state());
-        Serial.println(" try again in 5 seconds");
-      }
-      // Wait 5 seconds before retrying
       delay(5000);
     }
   }
