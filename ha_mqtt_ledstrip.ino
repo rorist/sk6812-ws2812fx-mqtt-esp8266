@@ -55,8 +55,11 @@ void setup() {
   ws2812fx.setBrightness(brightness);
   ws2812fx.setSpeed(fxspeed);
   ws2812fx.setMode(FX_MODE_STATIC);
-  ws2812fx.setColor(0, 0, 0);
+  ws2812fx.setColor(red, green, blue);
   ws2812fx.start();
+  if(stateOn) {
+    ws2812fx.service(); // turn on the leds immediatly
+  }
 
   // Store all mode names (for faster lookup ?)
   for(uint8_t i=0; i < ws2812fx.getModeCount(); i++) {
