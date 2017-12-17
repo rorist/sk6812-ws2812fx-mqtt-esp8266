@@ -67,3 +67,45 @@ light:
     optimistic: false
     qos: 0
 
+input_number:
+  - feather_led_speed:
+    name: Speed
+    initial: 200
+    min: 1
+    max: 5000
+    step: 100
+    unit_of_measurement: "ms"
+
+automation:
+  - alias: feather leds animation speed
+    id: '1512079408964'
+    initial_state: true
+    hide_entity: false
+    trigger:
+    - entity_id: input_number.feather_led_speed
+      platform: state
+    action:
+    - data_template:
+        payload_template: '{"speed":{{ trigger.to_state.state | int }}}'
+        topic: feather/leds/set
+      service: mqtt.publish
+  - action:
+    - data_template:
+        entity_id: input_number.feather_led_speed
+        value: '{% if trigger.payload_json.speed %}{{ trigger.payload_json.speed }}{% else %}1{% endif %}'
+      service: input_number.set_value
+    alias: feather leds animation speed state
+    condition: []
+    id: '1513300226027'
+    trigger:
+    - platform: mqtt
+      topic: kitchen/leds
+
+group:
+  - ligth_feather:
+    name: Lights feather
+    view: yes
+    entities:
+    - light.feather_leds
+    - input_number.feather_led_speed
+
