@@ -218,11 +218,11 @@ void reconnect() {
 }
 
 void loop() {
-  ArduinoOTA.handle();
   if (!client.connected()) {
     reconnect();
   }
   client.loop();
   ws2812fx.service();
+  ArduinoOTA.handle();
 }
 
