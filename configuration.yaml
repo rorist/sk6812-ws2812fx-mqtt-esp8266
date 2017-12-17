@@ -68,7 +68,7 @@ light:
     qos: 0
 
 input_number:
-  - feather_led_speed:
+  feather_led_speed:
     name: Speed
     initial: 200
     min: 1
@@ -102,7 +102,7 @@ automation:
       topic: kitchen/leds
 
 group:
-  - ligth_feather:
+  light_feather:
     name: Lights feather
     view: yes
     entities:
