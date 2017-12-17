@@ -4,6 +4,7 @@ USE:
 
 - Install Adafruit Neopixel (from the lib manager)
 - Install ArduinoJSON (from the lib manager)
+- Install ArduinoOTA (from the lib manager)
 - Install PubSubClient (from the lib manager)
 - Install WS2812FX (from a zip download on github)
 - Create a config.h file from the example with your own information
@@ -11,5 +12,7 @@ USE:
 
 TODO:
 - Make White work
-- Make OTA work
+- Use setSegment() and multiple colors
+- Make White work
+- Get rid of the String with some char
 - ...
