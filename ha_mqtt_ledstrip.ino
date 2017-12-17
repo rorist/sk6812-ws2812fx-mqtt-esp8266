@@ -35,7 +35,7 @@ const char* light_set_topic = CONFIG_MQTT_TOPIC_SET;
 const char* on_cmd = CONFIG_MQTT_PAYLOAD_ON;
 const char* off_cmd = CONFIG_MQTT_PAYLOAD_OFF;
 
-const int BUFFER_SIZE = JSON_OBJECT_SIZE(20);
+const size_t BUFFER_SIZE = JSON_OBJECT_SIZE(20);
 
 // Maintained state for reporting to HA
 byte red = 127;
@@ -106,7 +106,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
 }
 
 void processJson(char* message) {
-  StaticJsonBuffer<BUFFER_SIZE> jsonBuffer;
+  StaticJsonBuffer<BUFFER_SIZE + 80> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(message);
   if (!root.success()) {
     return;
