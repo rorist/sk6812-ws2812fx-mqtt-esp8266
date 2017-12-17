@@ -43,17 +43,17 @@ byte green = 127;
 byte blue = 127;
 //byte white = 0;
 byte brightness = 127;
-bool stateOn = false;
+uint16_t fxspeed = 200;
+bool stateOn = true;
 
 const char* setEffect = NULL;
 String currentEffect = "Static";
 String allEffects[MODE_COUNT];
 
 void setup() {
-  
   ws2812fx.init();
   ws2812fx.setBrightness(brightness);
-  ws2812fx.setSpeed(SPEED);
+  ws2812fx.setSpeed(fxspeed);
   ws2812fx.setMode(FX_MODE_STATIC);
   ws2812fx.setColor(0, 0, 0);
   ws2812fx.start();
@@ -150,8 +150,12 @@ void processJson(char* message) {
     brightness = root["brightness"];
     ws2812fx.setBrightness(brightness);
   }
+
+  if (root.containsKey("speed")) {
+    fxspeed = root["speed"];
+    ws2812fx.setSpeed(fxspeed);
+  }
  
-  return true;
 }
 
 void setMode(String _mode) {
@@ -164,27 +168,31 @@ void setMode(String _mode) {
   }
 }
 
+/*
 void setAllColors() {
     for(uint16_t i=0; i<ws2812fx.numPixels(); i++) {
       ws2812fx.setPixelColor(i, red, green, blue, white);
       ws2812fx.show();
     }
 }
+*/
 
 void sendState() {
   StaticJsonBuffer<BUFFER_SIZE> jsonBuffer;
 
   JsonObject& root = jsonBuffer.createObject();
 
-  root["state"] = (stateOn) ? on_cmd : off_cmd;
   JsonObject& color = root.createNestedObject("color");
-  
   color["r"] = red;
   color["g"] = green;
   color["b"] = blue;
+  
+  root["state"] = (stateOn) ? on_cmd : off_cmd;
   root["brightness"] = brightness;
-  root["white_value"] = white;
   root["effect"] = currentEffect;
+  root["speed"] = fxspeed;
+  
+  //root["white_value"] = white;
 
   char buffer[root.measureLength() + 1];
   root.printTo(buffer, sizeof(buffer));
