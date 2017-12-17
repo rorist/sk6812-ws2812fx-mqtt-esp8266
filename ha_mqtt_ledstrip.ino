@@ -39,9 +39,9 @@ const size_t BUFFER_SIZE = JSON_OBJECT_SIZE(20);
 
 // Maintained state for reporting to HA
 byte red = 127;
-byte green = 0;
-byte blue = 0;
-byte white = 0;
+byte green = 127;
+byte blue = 127;
+//byte white = 0;
 byte brightness = 127;
 bool stateOn = false;
 
