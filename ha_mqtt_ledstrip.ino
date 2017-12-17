@@ -3,7 +3,7 @@
 // https://github.com/corbanmailloux/esp-mqtt-rgb-led
 
 // TODO
-// Change Speed
+// Use setSegment() and multiple colors
 // Make White work
 // Get rid of the String with some char
 
