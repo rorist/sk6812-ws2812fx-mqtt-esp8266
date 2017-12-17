@@ -66,8 +66,8 @@ void setup() {
     allEffects[i] = ws2812fx.getModeName(i);
   }
 
-  setup_wifi();
   setup_ota();
+  setup_wifi();
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
 
