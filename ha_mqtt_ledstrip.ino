@@ -207,11 +207,10 @@ void sendState() {
 }
 
 void reconnect() {
-  // Loop until we're reconnected
   while (!client.connected()) {
-    // Attempt to connect
     if (client.connect(client_id, mqtt_username, mqtt_password)) {
       client.subscribe(light_set_topic);
+      sendState();
     } else {
       delay(5000);
     }
