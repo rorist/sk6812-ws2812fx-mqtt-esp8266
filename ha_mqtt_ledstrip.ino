@@ -118,9 +118,12 @@ void processJson(char* message) {
   if (root.containsKey("state")) {
     if (strcmp(root["state"], on_cmd) == 0) {
       stateOn = true;
-      setMode(currentEffect);
-      ws2812fx.setColor(red, green, blue);
-      //setAllColors();
+      if(!root.containsKey("effect")) {
+        setMode(currentEffect);
+      }
+      if(!root.containsKey("color")) {
+        ws2812fx.setColor(red, green, blue);
+      }
     }
     else if (strcmp(root["state"], off_cmd) == 0) {
       stateOn = false;
