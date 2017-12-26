@@ -206,20 +206,12 @@ void sendState() {
   client.publish(light_state_topic, buffer, true);
 }
 
-void reconnect() {
-  while (!client.connected()) {
-    if (client.connect(client_id, mqtt_username, mqtt_password)) {
-      client.subscribe(light_set_topic);
-      sendState();
-    } else {
-      delay(5000);
-    }
-  }
-}
-
 void loop() {
   if (!client.connected()) {
-    reconnect();
+   if (client.connect(client_id, mqtt_username, mqtt_password)) {
+      client.subscribe(light_set_topic);
+      sendState();
+    }
   }
   client.loop();
   ws2812fx.service();
