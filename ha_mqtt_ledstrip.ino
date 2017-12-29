@@ -50,12 +50,16 @@ const char* setEffect = NULL;
 String currentEffect = "Static";
 String allEffects[MODE_COUNT];
 
+uint32_t getColorInt() {
+    return ((uint32_t)white << 24) | ((uint32_t)red << 16) | ((uint32_t)green << 8) | blue;
+}
+
 void setup() {
   ws2812fx.init();
   ws2812fx.setBrightness(brightness);
   ws2812fx.setSpeed(fxspeed);
   ws2812fx.setMode(FX_MODE_STATIC);
-  ws2812fx.setColor(red, green, blue);
+  ws2812fx.setColor(getColorInt());
   ws2812fx.start();
   if(stateOn) {
     ws2812fx.service(); // turn on the leds immediatly
@@ -79,11 +83,11 @@ void setup_ota() {
   ArduinoOTA.setPassword((const char *)CONFIG_OTA_PASS);
   ArduinoOTA.onStart([]() {
       setMode("Static");
-      ws2812fx.setColor(0, 0, 0);
+      ws2812fx.setColor(0);
   });
   ArduinoOTA.onEnd([]() {
       setMode(currentEffect);
-      ws2812fx.setColor(red, green, blue);
+      ws2812fx.setColor(getColorInt());
   });
   ArduinoOTA.begin();
 }
@@ -122,13 +126,13 @@ void processJson(char* message) {
         setMode(currentEffect);
       }
       if(!root.containsKey("color")) {
-        ws2812fx.setColor(red, green, blue);
+        ws2812fx.setColor(getColorInt());
       }
     }
     else if (strcmp(root["state"], off_cmd) == 0) {
       stateOn = false;
       setMode("Static");
-      ws2812fx.setColor(0, 0, 0);
+      ws2812fx.setColor(0);
     }
   }
 
@@ -142,15 +146,13 @@ void processJson(char* message) {
     red = root["color"]["r"];
     green = root["color"]["g"];
     blue = root["color"]["b"];
-    ws2812fx.setColor(red, green, blue);
+    ws2812fx.setColor(getColorInt());
   }
 
-  /*
   if (root.containsKey("white_value")) {
     white = root["white_value"];
-    setAllColors();
+    ws2812fx.setColor(getColorInt());
   }
-  */
 
   if (root.containsKey("brightness")) {
     brightness = root["brightness"];
@@ -174,15 +176,6 @@ void setMode(String _mode) {
   }
 }
 
-/*
-void setAllColors() {
-    for(uint16_t i=0; i<ws2812fx.numPixels(); i++) {
-      ws2812fx.setPixelColor(i, red, green, blue, white);
-      ws2812fx.show();
-    }
-}
-*/
-
 void sendState() {
   StaticJsonBuffer<BUFFER_SIZE> jsonBuffer;
 
@@ -192,13 +185,13 @@ void sendState() {
   color["r"] = red;
   color["g"] = green;
   color["b"] = blue;
+  root["white_value"] = white;
   
   root["state"] = (stateOn) ? on_cmd : off_cmd;
   root["brightness"] = brightness;
   root["effect"] = currentEffect;
   root["speed"] = fxspeed;
   
-  //root["white_value"] = white;
 
   char buffer[root.measureLength() + 1];
   root.printTo(buffer, sizeof(buffer));
