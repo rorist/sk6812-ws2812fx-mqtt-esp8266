@@ -12,8 +12,7 @@ USE:
 
 
 TODO:
-- Make White work
 - Use setSegment() and multiple colors
-- Make White work
 - Get rid of the String with some char
+- Add HA switch to reset colors to 0 so we can have white only (not possible using the default color wheel on HA)
 - ...
