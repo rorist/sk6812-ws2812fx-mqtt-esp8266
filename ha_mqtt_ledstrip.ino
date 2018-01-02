@@ -4,7 +4,6 @@
 
 // TODO
 // Use setSegment() and multiple colors
-// Make White work
 // Get rid of the String with some char
 
 #include "config.h"
