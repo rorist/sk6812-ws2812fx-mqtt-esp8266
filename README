@@ -17,4 +17,5 @@ TODO:
 - Use setSegment() and multiple colors
 - Get rid of the String with some char
 - Add HA switch to reset colors to 0 so we can have white only (not possible using the default color wheel on HA)
+- Sometimes the code crashed and restarts the ESP. It's possible it's a bug when it cycles to the white led (for instance when using a random color effect), and that it's a WS2812FX bug.
 - ...
