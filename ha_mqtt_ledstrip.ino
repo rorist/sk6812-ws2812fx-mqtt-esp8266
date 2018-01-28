@@ -37,11 +37,11 @@ const char* off_cmd = CONFIG_MQTT_PAYLOAD_OFF;
 const size_t BUFFER_SIZE = JSON_OBJECT_SIZE(20);
 
 // Maintained state for reporting to HA
-byte red = 0;
+byte red = 60;
 byte green = 0;
 byte blue = 0;
 byte white = 255;
-byte brightness = 200;
+byte brightness = 220;
 uint16_t fxspeed = 1000;
 bool stateOn = true;
 
