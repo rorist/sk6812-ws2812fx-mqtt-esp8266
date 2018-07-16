@@ -13,6 +13,9 @@
 #define CONFIG_MQTT_PASS "BLAH"
 #define CONFIG_MQTT_CLIENT_ID "feather_led" // Must be unique on the MQTT network
 
+// In case of problem, you may need to reduce the CONFIG_MQTT_CLIENT_ID length or increase
+// MQTT_MAX_PACKET_SIZE in PubSubClient.h  see https://github.com/knolleary/pubsubclient/blob/4c8ce14dada84af6783233d38d735958ff332362/examples/mqtt_auth/mqtt_auth.ino#L29
+
 // MQTT Topics
 #define CONFIG_MQTT_TOPIC_STATE "feather/leds"
 #define CONFIG_MQTT_TOPIC_SET "feather/leds/set"
